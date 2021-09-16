@@ -5,22 +5,37 @@ import os
 import json
 
 
+global API_BASEURL
+global CALENDAR_V1
+global session_json
+
 API_BASEURL = 'https://calendar.protonmail.com/api'
 CALENDAR_V1 = os.path.join(API_BASEURL, 'calendar/v1')
 
+def start_session(dump=False):
+    global proton_session
+    global session_dump
+    global session_data
 
-def start_session():
-    global proton_session = Session(
-        api_url=api_url,
-        appversion="WebCalendar_4.4.7",
-        TLSPinning=False,
-        user_agent="",
-    )
+    if not dump:
+        proton_session = Session(
+            api_url=API_BASEURL,
+            appversion="WebCalendar_4.4.7",
+            TLSPinning=False,
+            user_agent="",
+        )
+    else:
+        proton_session = Session.load(dump=dump)
+        session_dump = proton_session.dump()
+        session_data = session_dump['session_data']
+        print('\nSession loaded from file!\n')
+        pprint(session_dump)
+        return
 
     proton_session.authenticate(input('Username: '), getpass())
 
-    global session_dump = proton_session.dump()
-    global session_data = session_dump['session_data']
+    session_dump = proton_session.dump()
+    session_data = session_dump['session_data']
 
     if 'twofactor' in session_data['Scope']:
         proton_session.provide_2fa(input('Enter 2FA code: '))
@@ -31,17 +46,18 @@ def start_session():
 
 
 session_file_exists = os.path.exists('./session.json')
-session_file_empty =  os.stat('./session.json').st_size == 0
+session_file_empty = (os.stat('./session.json').st_size == 0) if session_file_exists else True
 
 if session_file_exists and not session_file_empty:
     # TODO: Load session by session.json file
-    pass
+    with open('session.json', "r") as f:
+        json_dump = json.loads(f.read())
+        start_session(json_dump)
 else:
     with open('session.json', 'w') as o:
-    o.write(session_json)
-    start_session()
-
-global session_json = json.dumps(session_dump, indent=4)
+        start_session()
+        session_json = json.dumps(session_dump, indent=4)
+        o.write(session_json)
 
 
 # TODO
