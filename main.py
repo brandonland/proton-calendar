@@ -49,7 +49,7 @@ session_file_exists = os.path.exists('./session.json')
 session_file_empty = (os.stat('./session.json').st_size == 0) if session_file_exists else True
 
 if session_file_exists and not session_file_empty:
-    # TODO: Load session by session.json file
+    # TODO: Load session via session.json file
     with open('session.json', "r") as f:
         json_dump = json.loads(f.read())
         start_session(json_dump)
@@ -66,7 +66,6 @@ def query_calendars():
         'url': CALENDAR_V1,
         'method': 'get',
     }
-    pass
 
 
 # TODO
